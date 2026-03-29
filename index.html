@@ -1,0 +1,1684 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IS Plomberie — Recherche de Fuite</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --blue: #0057FF;
+  --blue-light: #EEF3FF;
+  --blue-mid: #DBEAFE;
+  --dark: #0A0F1E;
+  --gray: #6B7280;
+  --border: #E5E7EB;
+  --white: #FFFFFF;
+  --green: #10B981;
+  --red: #EF4444;
+  --amber: #F59E0B;
+  --amber-light: #FFFBEB;
+  --bureau-bg: #F0F7FF;
+  --bureau-accent: #0057FF;
+  --terrain-bg: #FFFBEB;
+  --terrain-accent: #D97706;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: #F0F2F8;
+  color: var(--dark);
+  min-height: 100vh;
+  padding-bottom: 80px;
+}
+
+.header {
+  background: var(--dark);
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid #1A2240;
+}
+
+.logo {
+  width: 38px; height: 38px;
+  background: var(--blue);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', monospace;
+  color: white; font-size: 13px; font-weight: 500;
+  flex-shrink: 0;
+}
+
+.header-text h1 { color: white; font-size: 15px; font-weight: 600; }
+.header-text p { color: #6B7A99; font-size: 11px; margin-top: 1px; }
+
+.header-badge {
+  margin-left: auto;
+  background: #1A2240;
+  color: #6B7A99;
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+  padding: 3px 8px;
+  border-radius: 5px;
+}
+
+.progress-bar { background: #1A2240; height: 2px; }
+.progress-fill { height: 100%; background: var(--blue); width: 0%; transition: width 0.4s ease; }
+
+.container { max-width: 620px; margin: 0 auto; padding: 16px; }
+
+.part-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: 'DM Mono', monospace;
+  letter-spacing: 0.05em;
+}
+
+.part-label.bureau {
+  background: var(--bureau-bg);
+  color: var(--bureau-accent);
+  border: 1px solid #BFDBFE;
+}
+
+.part-label.terrain {
+  background: var(--terrain-bg);
+  color: var(--terrain-accent);
+  border: 1px solid #FDE68A;
+  margin-top: 16px;
+}
+
+.part-label .dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.part-label.bureau .dot { background: var(--bureau-accent); }
+.part-label.terrain .dot { background: var(--terrain-accent); }
+
+.card {
+  background: white;
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 8px;
+  border: 1px solid var(--border);
+}
+
+.card.bureau {
+  border-left: 3px solid var(--bureau-accent);
+  background: linear-gradient(135deg, #FAFCFF 0%, white 60%);
+}
+
+.card.terrain {
+  border-left: 3px solid var(--terrain-accent);
+  background: linear-gradient(135deg, #FFFDF5 0%, white 60%);
+}
+
+.card-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--dark);
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.card-title .icon {
+  width: 28px; height: 28px;
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.card.bureau .card-title .icon { background: var(--blue-light); }
+.card.terrain .card-title .icon { background: #FEF3C7; }
+
+.lock-badge {
+  margin-left: auto;
+  font-size: 10px;
+  font-family: 'DM Mono', monospace;
+  color: #60A5FA;
+  background: #EFF6FF;
+  padding: 2px 8px;
+  border-radius: 4px;
+  border: 1px solid #BFDBFE;
+}
+
+.field { margin-bottom: 12px; }
+.field:last-child { margin-bottom: 0; }
+
+label {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--gray);
+  margin-bottom: 5px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+label .req { color: var(--blue); margin-left: 2px; }
+
+.bureau-value {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1.5px solid #DBEAFE;
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--dark);
+  background: #F8FBFF;
+  font-weight: 500;
+}
+
+.bureau-value.placeholder { color: #94A3B8; font-weight: 400; font-style: italic; }
+
+input[type="text"],
+input[type="tel"],
+input[type="date"],
+input[type="time"],
+input[type="number"],
+textarea,
+select {
+  width: 100%;
+  padding: 11px 13px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px;
+  color: var(--dark);
+  background: #FAFAFA;
+  transition: border-color 0.2s, background 0.2s, box-shadow 0.2s;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: var(--amber);
+  background: white;
+  box-shadow: 0 0 0 3px rgba(245,158,11,0.1);
+}
+
+textarea { resize: none; min-height: 76px; }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+.radio-group { display: flex; gap: 7px; flex-wrap: wrap; }
+
+.radio-btn {
+  padding: 8px 14px;
+  border: 1.5px solid var(--border);
+  border-radius: 7px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: #FAFAFA;
+  color: var(--dark);
+  user-select: none;
+}
+
+.radio-btn:hover { border-color: var(--amber); }
+.radio-btn.selected { background: var(--amber); border-color: var(--amber); color: white; }
+
+.check-group { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+
+.check-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 9px 11px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s;
+  background: #FAFAFA;
+}
+
+.check-item:hover { border-color: var(--amber); background: #FFFBEB; }
+.check-item input[type="checkbox"] { width: 16px; height: 16px; accent-color: var(--amber); flex-shrink: 0; cursor: pointer; }
+.check-item span { font-size: 13px; font-weight: 500; color: var(--dark); }
+.check-item.checked { border-color: var(--amber); background: #FFFBEB; }
+
+.photo-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+
+@media (min-width: 560px) {
+  .photo-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+.photo-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.photo-comment {
+  width: 100%;
+  padding: 9px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 12px;
+  color: var(--dark);
+  background: white;
+  outline: none;
+}
+
+.photo-comment:focus {
+  border-color: var(--amber);
+  box-shadow: 0 0 0 3px rgba(245,158,11,0.1);
+}
+
+.section-note {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+  color: #475569;
+  margin-bottom: 12px;
+  line-height: 1.5;
+}
+
+.photo-slot {
+  aspect-ratio: 1;
+  border: 2px dashed var(--border);
+  border-radius: 10px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #FAFAFA;
+  position: relative;
+  overflow: hidden;
+}
+
+.photo-slot:hover { border-color: var(--amber); background: #FFFBEB; }
+.photo-slot input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.photo-slot .p-icon { font-size: 20px; margin-bottom: 3px; }
+.photo-slot .p-label { font-size: 10px; color: var(--gray); font-weight: 500; text-align: center; padding: 0 5px; }
+.photo-slot.filled { border-style: solid; border-color: var(--green); }
+.photo-slot img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; border-radius: 9px; }
+
+.sig-wrap {
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  overflow: hidden;
+  background: #FAFAFA;
+}
+
+#signatureCanvas {
+  display: block; width: 100%; height: 150px;
+  cursor: crosshair; touch-action: none;
+}
+
+.sig-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 7px 12px; border-top: 1px solid var(--border); background: white;
+}
+
+.sig-hint { font-size: 11px; color: var(--gray); }
+.btn-clear { font-size: 11px; color: var(--red); background: none; border: none; cursor: pointer; font-family: 'DM Sans', sans-serif; font-weight: 500; }
+
+.contact-card {
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 8px;
+  background: white;
+  animation: fadeIn 0.2s ease;
+  position: relative;
+}
+
+.contact-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 9px; }
+.contact-lbl { font-size: 11px; font-weight: 600; color: var(--bureau-accent); font-family: 'DM Mono', monospace; }
+.btn-rm { background: none; border: none; color: var(--red); font-size: 16px; cursor: pointer; padding: 0 3px; line-height: 1; }
+
+.contact-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.contact-grid .full { grid-column: 1 / -1; }
+
+.contact-input {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1.5px solid var(--border);
+  border-radius: 7px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--dark);
+  background: #F8FBFF;
+  outline: none;
+  -webkit-appearance: none;
+}
+
+.contact-input:focus { border-color: var(--blue); }
+
+.btn-add-contact {
+  width: 100%;
+  padding: 10px;
+  border: 2px dashed #BFDBFE;
+  border-radius: 8px;
+  background: var(--blue-light);
+  color: var(--bureau-accent);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px; font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-top: 3px;
+}
+
+.btn-add-contact:hover { background: #DBEAFE; }
+
+.submit-area { margin-top: 20px; }
+
+.btn-submit {
+  width: 100%;
+  padding: 15px;
+  background: var(--green);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15px; font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.01em;
+}
+
+.btn-submit:hover { background: #0EA570; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(16,185,129,0.3); }
+.btn-submit:active { transform: translateY(0); }
+
+.success {
+  display: none; text-align: center;
+  background: white; border-radius: 16px; padding: 40px 24px;
+  border: 1px solid var(--border);
+}
+.success.show { display: block; }
+.success-icon { width: 68px; height: 68px; background: #D1FAE5; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 30px; margin: 0 auto 18px; }
+.success h2 { font-size: 20px; font-weight: 700; margin-bottom: 7px; }
+.success p { color: var(--gray); font-size: 14px; line-height: 1.6; }
+
+.btn-new {
+  display: inline-block;
+  margin-top: 18px;
+  padding: 12px 28px;
+  background: var(--blue);
+  color: white;
+  border: none; border-radius: 10px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 14px; font-weight: 600;
+  cursor: pointer;
+}
+
+.divider { height: 1px; background: var(--border); margin: 12px 0; }
+.hint { font-size: 11px; color: var(--gray); margin-top: 4px; }
+
+.info-box {
+  background: #FEF3C7;
+  border: 1px solid #FDE68A;
+  border-radius: 8px;
+  padding: 10px 13px;
+  font-size: 13px;
+  color: #92400E;
+  margin-bottom: 14px;
+  font-weight: 500;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.main-form { animation: fadeIn 0.3s ease; }
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">IS</div>
+  <div class="header-text">
+    <h1>IS Plomberie</h1>
+    <p>Rapport Recherche de Fuite</p>
+  </div>
+  <div class="header-badge" id="dateDisplay"></div>
+</div>
+<div class="progress-bar"><div class="progress-fill" id="progress" style="width:0%"></div></div>
+
+<div class="container">
+
+  <div class="main-form" id="mainForm">
+
+    <div class="part-label bureau">
+      <div class="dot"></div>
+      PARTIE BUREAU — Pré-rempli depuis Trello
+    </div>
+
+    <div class="card bureau">
+      <div class="card-title">
+        <div class="icon">👤</div>
+        Dossier & Technicien
+        <span class="lock-badge">🔒 Trello</span>
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Technicien assigné</label>
+          <div class="bureau-value" id="bv-tech">—</div>
+        </div>
+        <div class="field">
+          <label>N° Dossier / Référence</label>
+          <div class="bureau-value" id="bv-dossier">—</div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Date</label>
+          <div class="bureau-value" id="bv-date">—</div>
+        </div>
+        <div class="field">
+          <label>Heure</label>
+          <div class="bureau-value" id="bv-heure">—</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Client / Syndic</label>
+        <div class="bureau-value" id="bv-client">—</div>
+      </div>
+    </div>
+
+    <div class="card bureau">
+      <div class="card-title">
+        <div class="icon">📍</div>
+        Localisation
+        <span class="lock-badge">🔒 Trello</span>
+      </div>
+      <div class="field">
+        <label>Adresse complète</label>
+        <div class="bureau-value" id="bv-adresse">—</div>
+      </div>
+      <div class="field">
+        <label>Résidence / Bâtiment / Cage</label>
+        <div class="bureau-value" id="bv-batiment">—</div>
+      </div>
+      <div class="field">
+        <label>Objet / Travaux à réaliser</label>
+        <div class="bureau-value" id="bv-apparts" style="min-height:52px; white-space: pre-wrap;">—</div>
+      </div>
+      <div class="field">
+        <label>Digicode / Accès bâtiment</label>
+        <div class="bureau-value" id="bv-acces">—</div>
+      </div>
+    </div>
+
+    <div class="card bureau">
+      <div class="card-title">
+        <div class="icon">📞</div>
+        Contacts sur place
+        <span class="lock-badge">🔒 Trello</span>
+      </div>
+      <div id="bv-contacts">
+        <div class="bureau-value">—</div>
+      </div>
+    </div>
+
+    <div class="card bureau">
+      <div class="card-title">
+        <div class="icon">🏠</div>
+        Estimation initiale
+        <span class="lock-badge">🔒 Trello</span>
+      </div>
+      <div class="field">
+        <label>Nb logements impactés (estimation bureau)</label>
+        <div class="bureau-value" id="bv-logements">—</div>
+      </div>
+    </div>
+
+    <div class="part-label terrain">
+      <div class="dot"></div>
+      PARTIE TERRAIN — À remplir par le technicien
+    </div>
+
+
+    <div class="card terrain">
+      <div class="card-title"><div class="icon">🚪</div>Accès & sécurisation</div>
+      <div class="field">
+        <label>Client / occupant présent lors de l'intervention ? <span class="req">*</span></label>
+        <div class="radio-group" id="presenceClient">
+          <div class="radio-btn" onclick="selectRadio(this,'presenceClient')">Oui</div>
+          <div class="radio-btn" onclick="selectRadio(this,'presenceClient')">Non</div>
+          <div class="radio-btn" onclick="selectRadio(this,'presenceClient')">Partiellement</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Une coupure d'eau a-t-elle été effectuée ? <span class="req">*</span></label>
+        <div class="radio-group" id="coupureEau">
+          <div class="radio-btn" onclick="selectRadio(this,'coupureEau');toggleCoupure(this)">Non</div>
+          <div class="radio-btn" onclick="selectRadio(this,'coupureEau');toggleCoupure(this)">Oui — partielle</div>
+          <div class="radio-btn" onclick="selectRadio(this,'coupureEau');toggleCoupure(this)">Oui — générale</div>
+        </div>
+      </div>
+      <div id="remiseEauBlock" style="display:none">
+        <div class="field">
+          <label>L'eau a-t-elle été remise en service avant de partir ? <span class="req">*</span></label>
+          <div class="radio-group" id="remiseEau">
+            <div class="radio-btn" onclick="selectRadio(this,'remiseEau')">Oui — remise en service</div>
+            <div class="radio-btn" onclick="selectRadio(this,'remiseEau')">Non — coupure maintenue</div>
+            <div class="radio-btn" onclick="selectRadio(this,'remiseEau')">Partielle</div>
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Le site est-il sécurisé au départ ? <span class="req">*</span></label>
+        <div class="radio-group" id="siteSecurise">
+          <div class="radio-btn" onclick="selectRadio(this,'siteSecurise')">Oui</div>
+          <div class="radio-btn" onclick="selectRadio(this,'siteSecurise')">Non</div>
+          <div class="radio-btn" onclick="selectRadio(this,'siteSecurise')">Partiellement</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card terrain">
+      <div class="card-title"><div class="icon">🔍</div>Diagnostic terrain</div>
+      <div class="field">
+        <label>La fuite a-t-elle été localisée ? <span class="req">*</span></label>
+        <div class="radio-group" id="fuiteLocalisee">
+          <div class="radio-btn" onclick="selectRadio(this,'fuiteLocalisee');toggleLocalisation(this)">Oui — localisée</div>
+          <div class="radio-btn" onclick="selectRadio(this,'fuiteLocalisee');toggleLocalisation(this)">Non — non localisée</div>
+          <div class="radio-btn" onclick="selectRadio(this,'fuiteLocalisee');toggleLocalisation(this)">Partielle</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Localisation précise de la fuite <span class="req">*</span></label>
+        <textarea id="localFuite" placeholder="Décrire précisément : cuisine, SDB, colonne EU/EF, sous évier, colonne, nourrice..."></textarea>
+      </div>
+      <div class="field">
+        <label>Origine / cause probable <span class="req">*</span></label>
+        <textarea id="causeProbable" placeholder="Ex : raccord cuivre percé, joint bac à douche défectueux, évacuation PVC fendue..."></textarea>
+      </div>
+      <div class="field">
+        <label>Type de fuite</label>
+        <div class="check-group" id="typeFuiteGroup">
+          <label class="check-item"><input type="checkbox" value="Apparente"><span>Apparente</span></label>
+          <label class="check-item"><input type="checkbox" value="Cachée"><span>Cachée</span></label>
+          <label class="check-item"><input type="checkbox" value="Dégât des eaux"><span>Dégât des eaux</span></label>
+          <label class="check-item"><input type="checkbox" value="Infiltration"><span>Infiltration</span></label>
+          <label class="check-item"><input type="checkbox" value="Condensation"><span>Condensation</span></label>
+          <label class="check-item"><input type="checkbox" id="cbAutre" value="Autre" onchange="toggleAutre(this)"><span>Autre</span></label>
+        </div>
+        <input type="text" id="autreFuiteText" placeholder="Préciser le type de fuite..." style="display:none;margin-top:8px;width:100%;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;">
+      </div>
+      <div class="field">
+        <label>La canalisation est privative ou commune ? <span class="req">*</span></label>
+        <div class="radio-group" id="typeReseau">
+          <div class="radio-btn" onclick="selectRadio(this,'typeReseau')">Privative</div>
+          <div class="radio-btn" onclick="selectRadio(this,'typeReseau')">Commune</div>
+          <div class="radio-btn" onclick="selectRadio(this,'typeReseau')">À déterminer</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Les parties communes sont-elles touchées ? <span class="req">*</span></label>
+        <div class="radio-group" id="partiesCommunes">
+          <div class="radio-btn" onclick="selectRadio(this,'partiesCommunes')">Non</div>
+          <div class="radio-btn" onclick="selectRadio(this,'partiesCommunes')">Oui</div>
+          <div class="radio-btn" onclick="selectRadio(this,'partiesCommunes')">À déterminer</div>
+        </div>
+      </div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Nb logements réellement impactés <span class="req">*</span></label>
+          <input type="number" id="nbLogements" placeholder="Confirmer ou corriger" min="1">
+        </div>
+        <div class="field">
+          <label>À quel étage se situe la fuite ?</label>
+          <input type="text" id="etage" placeholder="Ex : RDC, R+3, cave...">
+        </div>
+      </div>
+      <div id="motifNonLocalisationBlock" style="display:none">
+        <div class="field">
+          <label>Pourquoi la fuite n'a pas pu être localisée ? <span class="req">*</span></label>
+          <div class="radio-group" id="motifNonLocalisation">
+            <div class="radio-btn" onclick="selectRadio(this,'motifNonLocalisation')">Accès impossible</div>
+            <div class="radio-btn" onclick="selectRadio(this,'motifNonLocalisation')">Absence occupant</div>
+            <div class="radio-btn" onclick="selectRadio(this,'motifNonLocalisation')">Pas de mise en eau possible</div>
+            <div class="radio-btn" onclick="selectRadio(this,'motifNonLocalisation')">Besoin d'ouverture / casse</div>
+            <div class="radio-btn" onclick="selectRadio(this,'motifNonLocalisation')">Besoin matériel complémentaire</div>
+            <div class="radio-btn" onclick="selectRadio(this,'motifNonLocalisation')">Autre</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card terrain">
+      <div class="card-title"><div class="icon">🧪</div>Tests & réparation</div>
+      <div class="field">
+        <label>Tests réalisés <span class="req">*</span></label>
+        <div class="check-group" id="testsGroup">
+          <label class="check-item"><input type="checkbox" value="Visuelle"><span>Visuelle</span></label>
+          <label class="check-item"><input type="checkbox" value="Fluorescéine"><span>Fluorescéine</span></label>
+          <label class="check-item"><input type="checkbox" value="Mise en épreuve"><span>Mise en épreuve</span></label>
+          <label class="check-item"><input type="checkbox" value="Caméra inspection"><span>Caméra inspection</span></label>
+          <label class="check-item"><input type="checkbox" value="Caméra thermique"><span>Caméra thermique</span></label>
+          <label class="check-item"><input type="checkbox" value="Humidimètre"><span>Humidimètre</span></label>
+          <label class="check-item"><input type="checkbox" value="RDF destructive"><span>RDF destructive</span></label>
+          <label class="check-item"><input type="checkbox" value="Trappe de visite posée"><span>Trappe de visite posée</span></label>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="field">
+        <label>Une réparation a-t-elle été effectuée sur place ? <span class="req">*</span></label>
+        <div class="radio-group" id="reparEffectuee">
+          <div class="radio-btn" onclick="selectRadio(this,'reparEffectuee')">Non</div>
+          <div class="radio-btn" onclick="selectRadio(this,'reparEffectuee')">Oui — totale</div>
+          <div class="radio-btn" onclick="selectRadio(this,'reparEffectuee')">Oui — partielle</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Réparation préconisée / travaux à prévoir <span class="req">*</span></label>
+        <textarea id="reparation" placeholder="Ce qu'il faut faire : accès, casse, remplacement, remise en état, seconde intervention..."></textarea>
+      </div>
+      <div class="field">
+        <label>Remise en état du logement nécessaire ? <span class="req">*</span></label>
+        <div class="radio-group" id="remise">
+          <div class="radio-btn" onclick="selectRadio(this,'remise')">Non</div>
+          <div class="radio-btn" onclick="selectRadio(this,'remise')">Oui</div>
+          <div class="radio-btn" onclick="selectRadio(this,'remise')">Partielle</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Temps estimé pour la réparation</label>
+        <div class="radio-group" id="temps">
+          <div class="radio-btn" onclick="selectRadio(this,'temps')">&lt; 2h</div>
+          <div class="radio-btn" onclick="selectRadio(this,'temps')">2–4h</div>
+          <div class="radio-btn" onclick="selectRadio(this,'temps')">1 journée</div>
+          <div class="radio-btn" onclick="selectRadio(this,'temps')">Plusieurs jours</div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Diamètre canalisation</label>
+          <input type="text" id="diametre" placeholder="Ex : 16mm">
+        </div>
+        <div class="field">
+          <label>Matériaux</label>
+          <input type="text" id="materiaux" placeholder="Ex : PER, cuivre, PVC">
+        </div>
+      </div>
+    </div>
+
+    <div class="card terrain">
+      <div class="card-title"><div class="icon">📋</div>Retour bureau</div>
+      <div class="section-note">
+        Ce bloc doit permettre au bureau de savoir immédiatement quoi faire après lecture du PDF.
+      </div>
+      <div class="field">
+        <label>Suite bureau attendue <span class="req">*</span></label>
+        <div class="check-group" id="suiteBureauGroup">
+          <label class="check-item"><input type="checkbox" value="Clôture" onchange="handleSuiteBureauOption(this)"><span>Clôture</span></label>
+          <label class="check-item"><input type="checkbox" value="Devis réparation plomberie" onchange="handleSuiteBureauOption(this)"><span>Devis réparation plomberie</span></label>
+          <label class="check-item"><input type="checkbox" value="Devis remise en état" onchange="handleSuiteBureauOption(this)"><span>Devis remise en état</span></label>
+          <label class="check-item"><input type="checkbox" value="Nouveau passage technicien" onchange="handleSuiteBureauOption(this)"><span>Nouveau passage technicien</span></label>
+          <label class="check-item"><input type="checkbox" value="SAV / contrôle" onchange="handleSuiteBureauOption(this)"><span>SAV / contrôle</span></label>
+        </div>
+        <p class="hint">Plusieurs choix possibles. Si vous cochez <strong>Clôture</strong>, les autres choix se décochent automatiquement.</p>
+      </div>
+      <div class="field">
+        <label>Priorité bureau <span class="req">*</span></label>
+        <div class="radio-group" id="prioriteBureau">
+          <div class="radio-btn" onclick="selectRadio(this,'prioriteBureau')">Urgent immédiat</div>
+          <div class="radio-btn" onclick="selectRadio(this,'prioriteBureau')">Sous 24/48h</div>
+          <div class="radio-btn" onclick="selectRadio(this,'prioriteBureau')">Normal</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Résumé terrain pour le bureau <span class="req">*</span></label>
+        <textarea id="resumeBureau" placeholder="Ex : Fuite localisée sur EF sous évier cuisine. Eau remise. Devis plomberie + remise en état à préparer."></textarea>
+      </div>
+    </div>
+
+    <div class="card terrain">
+      <div class="card-title"><div class="icon">📸</div>Photos</div>
+      <p class="hint" style="margin-bottom:12px">Les 3 premières photos sont obligatoires. Ajoute un commentaire sous chaque photo si nécessaire.</p>
+      <div class="photo-grid">
+        <div class="photo-cell">
+          <div class="photo-slot" id="slot1">
+            <input type="file" accept="image/*" onchange="previewPhoto(this,'slot1')">
+            <div class="p-icon">📸</div><div class="p-label">Dégâts</div>
+          </div>
+          <input type="text" class="photo-comment" id="photoComment1" placeholder="Commentaire photo 1">
+        </div>
+        <div class="photo-cell">
+          <div class="photo-slot" id="slot2">
+            <input type="file" accept="image/*" onchange="previewPhoto(this,'slot2')">
+            <div class="p-icon">📸</div><div class="p-label">Fuite visible</div>
+          </div>
+          <input type="text" class="photo-comment" id="photoComment2" placeholder="Commentaire photo 2">
+        </div>
+        <div class="photo-cell">
+          <div class="photo-slot" id="slot3">
+            <input type="file" accept="image/*" onchange="previewPhoto(this,'slot3')">
+            <div class="p-icon">📸</div><div class="p-label">Zone travail</div>
+          </div>
+          <input type="text" class="photo-comment" id="photoComment3" placeholder="Commentaire photo 3">
+        </div>
+        <div class="photo-cell">
+          <div class="photo-slot" id="slot4">
+            <input type="file" accept="image/*" onchange="previewPhoto(this,'slot4')">
+            <div class="p-icon">➕</div><div class="p-label">Photo sup.</div>
+          </div>
+          <input type="text" class="photo-comment" id="photoComment4" placeholder="Commentaire photo 4">
+        </div>
+        <div class="photo-cell">
+          <div class="photo-slot" id="slot5">
+            <input type="file" accept="image/*" onchange="previewPhoto(this,'slot5')">
+            <div class="p-icon">➕</div><div class="p-label">Photo sup.</div>
+          </div>
+          <input type="text" class="photo-comment" id="photoComment5" placeholder="Commentaire photo 5">
+        </div>
+        <div class="photo-cell">
+          <div class="photo-slot" id="slot6">
+            <input type="file" accept="image/*" onchange="previewPhoto(this,'slot6')">
+            <div class="p-icon">➕</div><div class="p-label">Photo sup.</div>
+          </div>
+          <input type="text" class="photo-comment" id="photoComment6" placeholder="Commentaire photo 6">
+        </div>
+      </div>
+    </div>
+
+    <div class="card terrain">
+      <div class="card-title"><div class="icon">✍️</div>Observations & Signature</div>
+      <div class="field">
+        <label>Observations finales</label>
+        <textarea id="observations" placeholder="Remarques complémentaires pour Sarah, Anthony ou le client..."></textarea>
+      </div>
+      <div class="field">
+        <label>Le client / occupant a-t-il été informé des conclusions ? <span class="req">*</span></label>
+        <div class="radio-group" id="clientInfo">
+          <div class="radio-btn" onclick="selectRadio(this,'clientInfo')">Oui</div>
+          <div class="radio-btn" onclick="selectRadio(this,'clientInfo')">Non</div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="info-box">En signant, vous certifiez que les informations renseignées sont exactes et complètes.</div>
+      <div class="field">
+        <label>Signature du technicien <span class="req">*</span></label>
+        <div class="sig-wrap">
+          <canvas id="signatureCanvas"></canvas>
+          <div class="sig-bar">
+            <span class="sig-hint">Signez avec votre doigt</span>
+            <button class="btn-clear" onclick="clearSignature()">✕ Effacer</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="submit-area">
+      <button class="btn-submit" onclick="submitForm()">✓ Envoyer le rapport</button>
+    </div>
+
+  </div>
+
+  <div class="success" id="success">
+    <div class="success-icon">✅</div>
+    <h2>Rapport envoyé !</h2>
+    <p>Le PDF a été téléchargé sur votre appareil.<br>Rapport généré avec succès ✅</p>
+    <button class="btn-new" onclick="location.reload()">Nouveau rapport</button>
+  </div>
+
+</div>
+
+<script>
+const params = new URLSearchParams(window.location.search);
+
+// ── UPLOADCARE ─────────────────────────────────────────────
+const UPLOADCARE_PUB_KEY = '94469d28228d01de8911';
+
+document.addEventListener('DOMContentLoaded', () => {
+  const now = new Date();
+  document.getElementById('dateDisplay').textContent =
+    now.toLocaleDateString('fr-FR', {day:'2-digit', month:'short', year:'numeric'});
+
+  setValue('bv-date', now.toLocaleDateString('fr-FR'));
+  setValue('bv-heure', now.toTimeString().slice(0,5));
+
+  const fullUrl = window.location.href;
+  const shortLinkMatch = fullUrl.match(/cardLink=https?:\/\/trello\.com\/c\/([^&\/\s]+)/);
+  const shortLink = shortLinkMatch ? shortLinkMatch[1] : '';
+
+  function loadAndFill(rawDesc) {
+    const dossierVal = params.get('dossier') || '';
+
+    function getField(key) {
+      const regex = new RegExp(key + '\\s*:\\s*(.+)', 'i');
+      const match = rawDesc.match(regex);
+      if (!match) return '';
+      const val = match[1].trim();
+      return (val === 'ND' || val.startsWith('[')) ? '' : val;
+    }
+
+    function getBlock(startKey, stopKeys) {
+      const idx = rawDesc.indexOf(startKey);
+      if (idx === -1) return '';
+      let block = rawDesc.substring(idx + startKey.length).trim();
+      for (const s of stopKeys) {
+        const si = block.indexOf(s);
+        if (si !== -1) block = block.substring(0, si);
+      }
+      return block.trim();
+    }
+
+    const ref         = getField('Référence');
+    const typeClient  = getField('Type client');
+    const client      = (() => {
+      const regex = /(?<!Type )Client\s*:\s*(.+)/i;
+      const match = rawDesc.match(regex);
+      if (!match) return '';
+      const val = match[1].trim();
+      return (val === 'ND' || val.startsWith('[')) ? '' : val;
+    })();
+    const gest        = getField('Gestionnaire');
+    const emailGest   = getField('📧') || rawDesc.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-z]{2,}/)?.[0] || '';
+    const residence   = getField('Résidence');
+    const bat         = getField('Bâtiment');
+    const adresse     = getField('Adresse');
+    const ville       = getField('Ville');
+    const contactNom  = getField('Nom');
+    const contactTel  = getField('Téléphone');
+    const contactRole = getField('Rôle');
+    const typeInter   = getField('Type');
+    const descInter   = getField('Description');
+    const details     = getField('Détails');
+    const travaux     = getBlock('TRAVAUX À RÉALISER', ['📅', '⚠️', 'PLANIFICATION']);
+    const dateDem     = getField('Date demandée');
+    const urgence     = getField('Urgence');
+
+    const now = new Date();
+    const clientFull  = [typeClient, client].filter(Boolean).join(' ');
+    const gestFull    = [gest, emailGest].filter(Boolean).join(' / ');
+    const batFull     = [residence, bat ? 'Bât. ' + bat : ''].filter(Boolean).join(' — ');
+    const adresseFull = [adresse, ville].filter(Boolean).join(', ');
+
+    const objetLines = [
+      typeInter ? 'Type : ' + typeInter : '',
+      descInter || '',
+      details || ''
+    ].filter(Boolean).join('\n');
+
+    const travauxLines = travaux ? 'Travaux à réaliser :\n' + travaux : '';
+    const planifLine = [dateDem ? 'Date : ' + dateDem : '', urgence ? 'Urgence : ' + urgence : ''].filter(Boolean).join(' | ');
+    const objetFull = [objetLines, travauxLines, planifLine].filter(Boolean).join('\n\n');
+
+    setValue('bv-dossier', ref || dossierVal || '');
+    setValue('bv-client', clientFull);
+    setValue('bv-adresse', adresseFull);
+    setValue('bv-batiment', batFull);
+    setValue('bv-acces', '—');
+    setValue('bv-date', now.toLocaleDateString('fr-FR'));
+    setValue('bv-heure', now.toTimeString().slice(0,5));
+    setValue('bv-tech', params.get('tech') || '');
+
+    if (objetFull) setValue('bv-apparts', objetFull);
+
+    const contactsContainer = document.getElementById('bv-contacts');
+    if (contactNom || contactTel) {
+      contactsContainer.innerHTML = '';
+      const div = document.createElement('div');
+      div.style.cssText = 'padding:9px 12px;background:#F8FBFF;border:1.5px solid #DBEAFE;border-radius:8px;margin-bottom:6px;font-size:13px;font-weight:500;color:var(--dark)';
+      div.innerHTML = '<strong>' + (contactNom || '—') + '</strong>' +
+        (contactTel ? ' · ' + contactTel : '') +
+        (contactRole ? ' · ' + contactRole : '');
+      contactsContainer.appendChild(div);
+    } else {
+      contactsContainer.innerHTML = '<div class="bureau-value">—</div>';
+    }
+
+    initSignature();
+    updateProgress();
+  }
+
+  if (shortLink) {
+    document.querySelectorAll('.bureau-value').forEach(el => {
+      el.textContent = 'Chargement...';
+      el.style.color = '#999';
+    });
+
+    fetch('https://hook.eu1.make.com/dd25pcp8d1ydf6bf4c95jb0otoscfsfb?shortLink=' + shortLink)
+      .then(r => r.text())
+      .then(text => {
+        try {
+          const match = text.match(/\{"desc":\s*"([\s\S]*?)(?:"\s*\}|"\}?)\s*$/);
+          if (match) {
+            loadAndFill(match[1]);
+          } else {
+            const data = JSON.parse(text);
+            loadAndFill(data.desc || '');
+          }
+        } catch(e) {
+          const idx = text.indexOf('"desc": "');
+          if (idx !== -1) {
+            const desc = text.substring(idx + 9, text.lastIndexOf('"'));
+            loadAndFill(desc);
+          } else {
+            loadAndFill('');
+          }
+        }
+      })
+      .catch(() => loadAndFill(''));
+  } else {
+    loadAndFill('');
+  }
+});
+
+function setValue(id, val) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  if (val && val.trim()) {
+    el.textContent = val;
+    el.classList.remove('placeholder');
+  } else {
+    el.textContent = 'Non renseigné';
+    el.classList.add('placeholder');
+  }
+}
+
+function updateProgress() {
+  window.addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const scrolled = doc.scrollTop / (doc.scrollHeight - doc.clientHeight);
+    document.getElementById('progress').style.width = (scrolled * 100) + '%';
+  });
+}
+
+function selectRadio(el, groupId) {
+  document.querySelectorAll('#' + groupId + ' .radio-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function previewPhoto(input, slotId) {
+  const slot = document.getElementById(slotId);
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const image = new Image();
+      image.onload = () => {
+        const maxSize = 1200;
+        let w = image.width;
+        let h = image.height;
+        if (w > maxSize || h > maxSize) {
+          if (w > h) { h = Math.round(h * maxSize / w); w = maxSize; }
+          else { w = Math.round(w * maxSize / h); h = maxSize; }
+        }
+        const cvs = document.createElement('canvas');
+        cvs.width = w; cvs.height = h;
+        cvs.getContext('2d').drawImage(image, 0, 0, w, h);
+        const compressed = cvs.toDataURL('image/jpeg', 0.7);
+        slot.classList.add('filled');
+        let img = slot.querySelector('img');
+        if (!img) { img = document.createElement('img'); slot.appendChild(img); }
+        img.src = compressed;
+        slot.querySelector('.p-icon').style.display = 'none';
+        slot.querySelector('.p-label').style.display = 'none';
+      };
+      image.src = e.target.result;
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+
+let canvas, ctx, drawing = false, hasSig = false;
+
+function initSignature() {
+  canvas = document.getElementById('signatureCanvas');
+  ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth;
+  canvas.height = 150;
+  ctx.strokeStyle = '#0A0F1E';
+  ctx.lineWidth = 2.5;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  canvas.addEventListener('mousedown', startDraw);
+  canvas.addEventListener('mousemove', draw);
+  canvas.addEventListener('mouseup', stopDraw);
+  canvas.addEventListener('mouseleave', stopDraw);
+  canvas.addEventListener('touchstart', e => { e.preventDefault(); startDraw(e.touches[0]); }, {passive:false});
+  canvas.addEventListener('touchmove', e => { e.preventDefault(); draw(e.touches[0]); }, {passive:false});
+  canvas.addEventListener('touchend', stopDraw);
+}
+
+function getPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+}
+
+function startDraw(e) { drawing = true; hasSig = true; const p = getPos(e); ctx.beginPath(); ctx.moveTo(p.x, p.y); }
+function draw(e) { if (!drawing) return; const p = getPos(e); ctx.lineTo(p.x, p.y); ctx.stroke(); }
+function stopDraw() { drawing = false; }
+function clearSignature() { ctx.clearRect(0, 0, canvas.width, canvas.height); hasSig = false; }
+
+document.querySelectorAll('.check-item input[type="checkbox"]').forEach(cb => {
+  cb.addEventListener('change', () => {
+    cb.closest('.check-item').classList.toggle('checked', cb.checked);
+  });
+});
+
+
+function clearRadioGroup(groupId) {
+  document.querySelectorAll('#' + groupId + ' .radio-btn').forEach(b => b.classList.remove('selected'));
+}
+
+function toggleLocalisation(el) {
+  const val = el.textContent.trim();
+  const block = document.getElementById('motifNonLocalisationBlock');
+  const shouldShow = val !== 'Oui — localisée';
+  block.style.display = shouldShow ? 'block' : 'none';
+  if (!shouldShow) clearRadioGroup('motifNonLocalisation');
+}
+
+function getContactSummary() {
+  const el = document.getElementById('bv-contacts');
+  if (!el) return '—';
+  const txt = (el.innerText || el.textContent || '').replace(/\n+/g, ' | ').replace(/\s+\|\s+/g, ' | ').trim();
+  return txt || '—';
+}
+
+function getMotifNonLocalisation() {
+  const val = getSelected('motifNonLocalisation');
+  return val || '';
+}
+
+function getCheckedValues(groupId) {
+  return Array.from(document.querySelectorAll('#' + groupId + ' input[type="checkbox"]:checked')).map(cb => cb.value).join(', ');
+}
+
+function handleSuiteBureauOption(cb) {
+  const group = document.getElementById('suiteBureauGroup');
+  if (!group || !cb) return;
+  const all = Array.from(group.querySelectorAll('input[type="checkbox"]'));
+  const sync = input => {
+    const item = input.closest('.check-item');
+    if (item) item.classList.toggle('checked', input.checked);
+  };
+
+  if (cb.value === 'Clôture' && cb.checked) {
+    all.forEach(input => {
+      if (input !== cb) {
+        input.checked = false;
+        sync(input);
+      }
+    });
+  }
+
+  if (cb.value !== 'Clôture' && cb.checked) {
+    const cloture = group.querySelector('input[value="Clôture"]');
+    if (cloture) {
+      cloture.checked = false;
+      sync(cloture);
+    }
+  }
+
+  sync(cb);
+}
+
+function getPhotoData() {
+  const items = [];
+  for (let i = 1; i <= 6; i++) {
+    const slot = document.getElementById('slot' + i);
+    if (!slot) continue;
+    const img = slot.querySelector('img');
+    const commentEl = document.getElementById('photoComment' + i);
+    if (img && img.src && img.src.startsWith('data:image')) {
+      items.push({
+        src: img.src,
+        comment: commentEl ? commentEl.value.trim() : '',
+        label: 'Photo ' + i
+      });
+    }
+  }
+  return items;
+}
+
+function validateForm() {
+  const missing = [];
+  if (!hasSig) missing.push('Signature du technicien');
+  return missing;
+}
+
+function submitForm() {
+  const missing = validateForm();
+  if (missing.length) {
+    alert('Merci de compléter avant envoi :\n\n- ' + missing.join('\n- '));
+    return;
+  }
+
+  const btn = document.querySelector('.btn-submit');
+  btn.textContent = '⏳ Génération du rapport...';
+  btn.disabled = true;
+
+  const now = new Date();
+  const photoItems = getPhotoData();
+  const data = {
+    shortLink: (() => {
+      const fullUrl = window.location.href;
+      const m = fullUrl.match(/cardLink=https?:\/\/trello\.com\/c\/([^&\/\s]+)/);
+      return m ? m[1] : '';
+    })(),
+    tech: document.getElementById('bv-tech').textContent,
+    dossier: document.getElementById('bv-dossier').textContent,
+    date: document.getElementById('bv-date').textContent,
+    heure: document.getElementById('bv-heure').textContent,
+    client: document.getElementById('bv-client').textContent,
+    adresse: document.getElementById('bv-adresse').textContent,
+    batiment: document.getElementById('bv-batiment').textContent,
+    apparts: document.getElementById('bv-apparts').textContent,
+    acces: document.getElementById('bv-acces').textContent,
+    contactSurPlace: getContactSummary(),
+    nbLogementsBureau: document.getElementById('bv-logements').textContent,
+    nbLogements: document.getElementById('nbLogements').value,
+    localFuite: document.getElementById('localFuite').value.trim(),
+    causeProbable: document.getElementById('causeProbable').value.trim(),
+    typeFuite: getTypeFuite(),
+    testsRealises: getTestsRealises(),
+    typeReseau: getSelected('typeReseau'),
+    reparation: document.getElementById('reparation').value.trim(),
+    diametre: document.getElementById('diametre').value.trim(),
+    materiaux: document.getElementById('materiaux').value.trim(),
+    remise: getSelected('remise'),
+    temps: getSelected('temps'),
+    observations: document.getElementById('observations').value.trim(),
+    presenceClient: getSelected('presenceClient'),
+    coupureEau: getSelected('coupureEau'),
+    remiseEau: getSelected('remiseEau'),
+    siteSecurise: getSelected('siteSecurise'),
+    etage: document.getElementById('etage').value.trim(),
+    partiesCommunes: getSelected('partiesCommunes'),
+    fuiteLocalisee: getSelected('fuiteLocalisee'),
+    motifNonLocalisation: getMotifNonLocalisation(),
+    reparEffectuee: getSelected('reparEffectuee'),
+    suiteBureau: getCheckedValues('suiteBureauGroup'),
+    prioriteBureau: getSelected('prioriteBureau'),
+    resumeBureau: document.getElementById('resumeBureau').value.trim(),
+    clientInfo: getSelected('clientInfo'),
+    timestamp: now.toLocaleString('fr-FR'),
+    photos: photoItems.map(item => item.src),
+    photoItems: photoItems
+  };
+
+  const { jsPDF } = window.jspdf;
+  const pdfDoc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+
+  const pageW = 210;
+  const pageH = 297;
+  const ml = 16;
+  const mr = 16;
+  const cw = pageW - ml - mr;
+  let y = 0;
+
+  const C = {
+    navy:    [15, 23, 64],
+    blue:    [0, 87, 255],
+    blueLt:  [235, 242, 255],
+    amber:   [180, 90, 0],
+    amberLt: [255, 248, 235],
+    teal:    [5, 100, 75],
+    tealLt:  [235, 252, 245],
+    slate:   [51, 65, 85],
+    slateLt: [248, 250, 252],
+    border:  [220, 226, 235],
+    white:   [255, 255, 255],
+    label:   [90, 105, 125]
+  };
+
+  function setFill(c) { pdfDoc.setFillColor(c[0], c[1], c[2]); }
+  function setDraw(c) { pdfDoc.setDrawColor(c[0], c[1], c[2]); }
+  function setTxt(c)  { pdfDoc.setTextColor(c[0], c[1], c[2]); }
+
+  function cleanValue(val) {
+    const txt = String(val || '').trim();
+    return txt && txt !== '—' && txt !== 'Non renseigné' && txt !== 'Non renseigne' ? txt : '—';
+  }
+
+  function checkPage(needed = 20) {
+    if (y + needed > pageH - 16) {
+      pdfDoc.addPage();
+      drawPageHeader();
+      drawFooter();
+      y = 26;
+    }
+  }
+
+  function drawFooter() {
+    const pg = pdfDoc.internal.getCurrentPageInfo().pageNumber;
+    const tot = pdfDoc.internal.getNumberOfPages();
+    setDraw(C.border);
+    pdfDoc.setLineWidth(0.3);
+    pdfDoc.line(ml, pageH - 11, pageW - mr, pageH - 11);
+    pdfDoc.setFontSize(7.5);
+    pdfDoc.setFont('helvetica', 'normal');
+    setTxt(C.label);
+    pdfDoc.text('IS Plomberie — Rapport Recherche de Fuite — Confidentiel', ml, pageH - 6);
+    pdfDoc.text('Page ' + pg + ' / ' + tot, pageW - mr, pageH - 6, { align: 'right' });
+  }
+
+  function drawPageHeader() {
+    setFill(C.navy);
+    pdfDoc.rect(0, 0, pageW, 14, 'F');
+    setFill(C.blue);
+    pdfDoc.rect(0, 14, pageW, 1.5, 'F');
+    pdfDoc.setFontSize(8);
+    pdfDoc.setFont('helvetica', 'bold');
+    setTxt(C.white);
+    pdfDoc.text('IS PLOMBERIE', ml, 9.5);
+    setTxt([160, 180, 220]);
+    pdfDoc.setFontSize(7.5);
+    pdfDoc.setFont('helvetica', 'normal');
+    pdfDoc.text('Rapport RDF — ' + cleanValue(data.client) + ' — ' + cleanValue(data.adresse), pageW / 2, 9.5, { align: 'center' });
+    pdfDoc.text(cleanValue(data.date), pageW - mr, 9.5, { align: 'right' });
+  }
+
+  setFill(C.navy);
+  pdfDoc.rect(0, 0, pageW, 42, 'F');
+  setFill(C.blue);
+  pdfDoc.rect(0, 38, pageW, 4, 'F');
+  setFill([0, 110, 255]);
+  pdfDoc.rect(0, 0, 4, 42, 'F');
+
+  pdfDoc.setFontSize(24);
+  pdfDoc.setFont('helvetica', 'bold');
+  setTxt(C.white);
+  pdfDoc.text('IS PLOMBERIE', ml + 6, 18);
+  pdfDoc.setFontSize(10);
+  pdfDoc.setFont('helvetica', 'normal');
+  setTxt([160, 190, 255]);
+  pdfDoc.text('RAPPORT DE RECHERCHE DE FUITE', ml + 6, 27);
+  pdfDoc.setFontSize(8.5);
+  setTxt([120, 150, 220]);
+  pdfDoc.text('Genere le ' + data.timestamp, ml + 6, 34);
+
+  const dosVal = cleanValue(data.dossier) !== '—' ? cleanValue(data.dossier) : '';
+  if (dosVal) {
+    pdfDoc.setFontSize(8);
+    pdfDoc.setFont('helvetica', 'bold');
+    setTxt([160, 190, 255]);
+    pdfDoc.text('DOSSIER N°', pageW - mr, 16, { align: 'right' });
+    pdfDoc.setFontSize(13);
+    setTxt(C.white);
+    pdfDoc.text(dosVal, pageW - mr, 26, { align: 'right' });
+  }
+
+  y = 52;
+
+  const bh = 22;
+  setFill(C.blueLt);
+  setDraw(C.blue);
+  pdfDoc.setLineWidth(0.3);
+  pdfDoc.roundedRect(ml, y, cw, bh, 2, 2, 'FD');
+
+  const col3w = cw / 3;
+  setDraw([180, 210, 255]);
+  pdfDoc.setLineWidth(0.3);
+  pdfDoc.line(ml + col3w, y + 4, ml + col3w, y + bh - 4);
+  pdfDoc.line(ml + col3w * 2, y + 4, ml + col3w * 2, y + bh - 4);
+
+  function recapCell(lbl, val, cx) {
+    pdfDoc.setFontSize(6.5);
+    pdfDoc.setFont('helvetica', 'bold');
+    setTxt(C.blue);
+    pdfDoc.text(lbl, cx + 5, y + 7);
+    pdfDoc.setFontSize(9.5);
+    pdfDoc.setFont('helvetica', 'bold');
+    setTxt(C.navy);
+    const v = cleanValue(val);
+    const lines = pdfDoc.splitTextToSize(v, col3w - 10);
+    pdfDoc.text(lines[0], cx + 5, y + 15);
+  }
+
+  recapCell('TECHNICIEN', data.tech, ml);
+  recapCell('CLIENT / SYNDIC', data.client, ml + col3w);
+  recapCell('DATE INTERVENTION', cleanValue(data.date) + ' ' + cleanValue(data.heure), ml + col3w * 2);
+  y += bh + 10;
+
+  function addSection(title, fillColor) {
+    checkPage(16);
+    setFill(fillColor);
+    pdfDoc.rect(ml, y, cw, 9, 'F');
+    setFill(C.white);
+    pdfDoc.rect(ml, y, 2.5, 9, 'F');
+    pdfDoc.setFontSize(8.5);
+    pdfDoc.setFont('helvetica', 'bold');
+    setTxt(C.white);
+    pdfDoc.text(title.toUpperCase(), ml + 6, y + 6.2);
+    y += 13;
+  }
+
+  function addRow(label, value, bgColor) {
+    const val = cleanValue(value);
+    const labelW = 56;
+    const valueW = cw - labelW;
+    const lines = pdfDoc.splitTextToSize(String(val), valueW - 4);
+    const rh = Math.max(9, lines.length * 5 + 4);
+    checkPage(rh);
+
+    if (bgColor) { setFill(bgColor); } else { setFill(C.slateLt); }
+    pdfDoc.rect(ml, y, cw, rh, 'F');
+    setFill([238, 242, 248]);
+    pdfDoc.rect(ml, y, labelW, rh, 'F');
+
+    setDraw(C.border);
+    pdfDoc.setLineWidth(0.2);
+    pdfDoc.line(ml + labelW, y, ml + labelW, y + rh);
+    pdfDoc.line(ml, y + rh, ml + cw, y + rh);
+
+    pdfDoc.setFontSize(7.5);
+    pdfDoc.setFont('helvetica', 'bold');
+    setTxt(C.label);
+    pdfDoc.text(label, ml + 3, y + rh / 2 + 2.5);
+
+    pdfDoc.setFontSize(9);
+    pdfDoc.setFont('helvetica', 'normal');
+    setTxt(C.navy);
+    pdfDoc.text(lines, ml + labelW + 3, y + 4.5 + (lines.length === 1 ? rh/2 - 2 : 0));
+
+    y += rh;
+  }
+
+  function addBadgeRow(label, badges) {
+    const labelW = 56;
+    const rh = 11;
+    checkPage(rh);
+
+    setFill(C.slateLt);
+    pdfDoc.rect(ml, y, cw, rh, 'F');
+    setFill([238, 242, 248]);
+    pdfDoc.rect(ml, y, labelW, rh, 'F');
+
+    setDraw(C.border);
+    pdfDoc.setLineWidth(0.2);
+    pdfDoc.line(ml + labelW, y, ml + labelW, y + rh);
+    pdfDoc.line(ml, y + rh, ml + cw, y + rh);
+
+    pdfDoc.setFontSize(7.5);
+    pdfDoc.setFont('helvetica', 'bold');
+    setTxt(C.label);
+    pdfDoc.text(label, ml + 3, y + 7);
+
+    const val = cleanValue(badges);
+    if (val === '—') {
+      pdfDoc.setFontSize(9);
+      pdfDoc.setFont('helvetica', 'normal');
+      setTxt(C.navy);
+      pdfDoc.text('—', ml + labelW + 3, y + 7);
+    } else {
+      const items = val.split(',').map(s => s.trim()).filter(Boolean);
+      let bx = ml + labelW + 3;
+      items.forEach(item => {
+        const tw = pdfDoc.getTextWidth(item) + 6;
+        if (bx + tw > ml + cw - 2) return;
+        setFill(C.navy);
+        pdfDoc.roundedRect(bx, y + 2.5, tw, 6, 1, 1, 'F');
+        pdfDoc.setFontSize(7);
+        pdfDoc.setFont('helvetica', 'bold');
+        setTxt(C.white);
+        pdfDoc.text(item, bx + 3, y + 7);
+        bx += tw + 2.5;
+        setTxt(C.navy);
+      });
+    }
+    y += rh;
+  }
+
+  function addKpiGrid(items) {
+    const cols = 3;
+    const gap = 4;
+    const boxW = (cw - gap * (cols - 1)) / cols;
+    const boxH = 16;
+    let idx = 0;
+    items.forEach(item => {
+      if (idx % cols === 0) {
+        checkPage(boxH + 6);
+      }
+      const row = Math.floor(idx / cols);
+      const col = idx % cols;
+      const x = ml + col * (boxW + gap);
+      const yBox = y + row * (boxH + gap);
+
+      setFill(C.blueLt);
+      setDraw(C.border);
+      pdfDoc.setLineWidth(0.25);
+      pdfDoc.roundedRect(x, yBox, boxW, boxH, 2, 2, 'FD');
+
+      pdfDoc.setFontSize(6.5);
+      pdfDoc.setFont('helvetica', 'bold');
+      setTxt(C.label);
+      pdfDoc.text(item.label.toUpperCase(), x + 3, yBox + 5);
+
+      pdfDoc.setFontSize(8.5);
+      pdfDoc.setFont('helvetica', 'bold');
+      setTxt(C.navy);
+      const lines = pdfDoc.splitTextToSize(cleanValue(item.value), boxW - 6);
+      pdfDoc.text(lines.slice(0,2), x + 3, yBox + 10);
+      idx += 1;
+    });
+    const rows = Math.ceil(items.length / cols);
+    y += rows * (boxH + gap) + 4;
+  }
+
+  addSection('Synthese decisionnelle', C.teal);
+  addKpiGrid([
+    { label: 'Fuite localisee', value: data.fuiteLocalisee },
+    { label: 'Reseau', value: data.typeReseau },
+    { label: 'Reparation sur place', value: data.reparEffectuee },
+    { label: 'Eau remise', value: data.remiseEau || (data.coupureEau === 'Non' ? 'Non concerne' : '') },
+    { label: 'Suite bureau', value: data.suiteBureau },
+    { label: 'Priorite', value: data.prioriteBureau }
+  ]);
+  addRow('Resume terrain pour le bureau', data.resumeBureau, C.tealLt);
+  y += 8;
+
+  addSection('Informations dossier — Partie Bureau', C.navy);
+  addRow('Adresse', data.adresse);
+  addRow('Residence / Batiment', data.batiment);
+  addRow('Objet / travaux a realiser', data.apparts);
+  addRow('Digicode / acces', data.acces);
+  addRow('Contact sur place', data.contactSurPlace, C.blueLt);
+  addRow('Estimation bureau logements touches', data.nbLogementsBureau);
+  y += 8;
+
+  addSection('Acces & securisation', C.slate);
+  addRow('Client / occupant present', data.presenceClient);
+  addRow('Coupure eau effectuee', data.coupureEau);
+  addRow('Eau remise en service', data.remiseEau || (data.coupureEau === 'Non' ? 'Non concerne' : '—'));
+  addRow('Site securise au depart', data.siteSecurise);
+  addRow('Client informe des conclusions', data.clientInfo);
+  y += 8;
+
+  addSection('Diagnostic', C.blue);
+  addRow('Localisation fuite', data.localFuite, C.blueLt);
+  addRow('Origine / cause probable', data.causeProbable);
+  addBadgeRow('Type de fuite', data.typeFuite);
+  addRow('Type de reseau', data.typeReseau);
+  addRow('Parties communes touchees', data.partiesCommunes);
+  addRow('Nb logements impactes (constate)', data.nbLogements);
+  addRow('Etage de la fuite', data.etage);
+  if (data.motifNonLocalisation) addRow('Motif de non-localisation', data.motifNonLocalisation, C.amberLt);
+  y += 8;
+
+  addSection('Tests & reparation', C.blue);
+  addBadgeRow('Tests realises', data.testsRealises);
+  addRow('Reparation effectuee sur place', data.reparEffectuee);
+  addRow('Reparation preconisee / travaux', data.reparation, C.tealLt);
+  addRow('Remise en etat logement', data.remise);
+  addRow('Temps estime reparation', data.temps);
+  addRow('Diametre canalisation', data.diametre);
+  addRow('Materiaux', data.materiaux);
+  y += 8;
+
+  addSection('Retour bureau', C.navy);
+  addRow('Suite bureau attendue', data.suiteBureau, C.blueLt);
+  addRow('Priorite bureau', data.prioriteBureau);
+  addRow('Resume terrain', data.resumeBureau, C.tealLt);
+  y += 8;
+
+  addSection('Observations & conclusion', C.slate);
+  addRow('Observations', data.observations || '—', C.amberLt);
+  y += 8;
+
+  if (data.photoItems && data.photoItems.length > 0) {
+    addSection('Photos commentees', C.slate);
+    const cols = 2;
+    const gap = 4;
+    const photoW = (cw - gap) / cols;
+    const photoH = photoW * 0.68;
+
+    let col = 0;
+    let rowMaxH = 0;
+    for (let idx = 0; idx < data.photoItems.length; idx++) {
+      const item = data.photoItems[idx];
+      const comment = cleanValue(item.comment || 'Sans commentaire');
+      const commentLines = pdfDoc.splitTextToSize(comment, photoW - 4);
+      const cellH = photoH + Math.max(8, commentLines.length * 4 + 4) + 7;
+
+      if (col === 0) {
+        rowMaxH = 0;
+        checkPage(cellH + 2);
+      }
+      rowMaxH = Math.max(rowMaxH, cellH);
+
+      const px = ml + col * (photoW + gap);
+      const py = y;
+
+      setFill(C.white);
+      setDraw(C.border);
+      pdfDoc.setLineWidth(0.3);
+      pdfDoc.roundedRect(px, py, photoW, cellH, 2, 2, 'S');
+
+      try {
+        pdfDoc.addImage(item.src, 'JPEG', px + 2, py + 2, photoW - 4, photoH);
+      } catch (e) {
+        try { pdfDoc.addImage(item.src, 'PNG', px + 2, py + 2, photoW - 4, photoH); } catch(e2) {}
+      }
+
+      pdfDoc.setFontSize(7);
+      pdfDoc.setFont('helvetica', 'bold');
+      setTxt(C.label);
+      pdfDoc.text(item.label || ('Photo ' + (idx + 1)), px + 2, py + photoH + 6);
+
+      pdfDoc.setFontSize(8);
+      pdfDoc.setFont('helvetica', 'normal');
+      setTxt(C.navy);
+      pdfDoc.text(commentLines, px + 2, py + photoH + 10);
+
+      if (col === 1 || idx === data.photoItems.length - 1) {
+        y += rowMaxH + 4;
+        col = 0;
+      } else {
+        col = 1;
+      }
+    }
+    y += 4;
+  }
+
+  checkPage(52);
+  addSection('Signature technicien', C.navy);
+
+  pdfDoc.setFontSize(8.5);
+  pdfDoc.setFont('helvetica', 'normal');
+  setTxt(C.slate);
+  pdfDoc.text('Technicien : ' + cleanValue(data.tech), ml, y + 5);
+  pdfDoc.text('Date : ' + cleanValue(data.date) + ' a ' + cleanValue(data.heure), ml, y + 12);
+
+  setFill([250, 251, 253]);
+  setDraw(C.border);
+  pdfDoc.setLineWidth(0.3);
+  pdfDoc.roundedRect(ml + 80, y - 2, cw - 80, 38, 2, 2, 'FD');
+  const sigCanvas = document.getElementById('signatureCanvas');
+  pdfDoc.addImage(sigCanvas.toDataURL('image/png'), 'PNG', ml + 82, y, cw - 84, 34);
+  y += 44;
+
+  const totalPages = pdfDoc.internal.getNumberOfPages();
+  for (let i = 1; i <= totalPages; i++) {
+    pdfDoc.setPage(i);
+    drawFooter();
+  }
+
+  const pdfBlob = pdfDoc.output('blob');
+  const pdfBase64 = pdfDoc.output('datauristring').split(',')[1];
+  const nomFichier = 'Rapport_RDF_' + cleanValue(data.client).replace(/[^a-zA-Z0-9]/g,'_').substring(0,30) + '_' + cleanValue(data.date).replace(/\//g,'-') + '.pdf';
+
+  btn.textContent = '⏳ Envoi en cours...';
+
+  fetch('https://hook.eu1.make.com/ua7poqcxqlaxelqeojpoa7q16b2wxm7c', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      technicien: cleanValue(data.tech),
+      client: cleanValue(data.client),
+      adresse: cleanValue(data.adresse),
+      dossier: cleanValue(data.dossier),
+      date: cleanValue(data.date),
+      statut: cleanValue(data.suiteBureau),
+      priorite: cleanValue(data.prioriteBureau),
+      resume: cleanValue(data.resumeBureau),
+      nomFichier: nomFichier,
+      pdfBase64: pdfBase64
+    })
+  })
+  .then(() => console.log('Envoyé à Make !'))
+  .catch(err => console.error('Erreur:', err))
+  .finally(() => {
+    document.getElementById('mainForm').style.display = 'none';
+    document.getElementById('success').classList.add('show');
+    document.getElementById('progress').style.width = '100%';
+    window.scrollTo(0, 0);
+    setTimeout(() => {
+      const urlLocal = URL.createObjectURL(pdfBlob);
+      const a = document.createElement('a');
+      a.href = urlLocal;
+      a.download = nomFichier;
+      a.click();
+      URL.revokeObjectURL(urlLocal);
+    }, 500);
+  });
+}
+
+function getSelected(groupId) {
+  const sel = document.querySelector('#' + groupId + ' .radio-btn.selected');
+  return sel ? sel.textContent : '';
+}
+
+function toggleAutre(cb) {
+  document.getElementById('autreFuiteText').style.display = cb.checked ? 'block' : 'none';
+}
+
+function toggleCoupure(el) {
+  const val = el.textContent.trim();
+  const shouldShow = (val !== 'Non');
+  document.getElementById('remiseEauBlock').style.display = shouldShow ? 'block' : 'none';
+  if (!shouldShow) clearRadioGroup('remiseEau');
+}
+
+function getTypeFuite() {
+  const vals = Array.from(document.querySelectorAll('#typeFuiteGroup input[type="checkbox"]:checked')).map(cb => cb.value);
+  const autreText = document.getElementById('autreFuiteText').value.trim();
+  return vals.map(v => v === 'Autre' && autreText ? 'Autre: ' + autreText : v).join(', ');
+}
+
+function getTestsRealises() {
+  return Array.from(document.querySelectorAll('#testsGroup input[type="checkbox"]:checked')).map(cb => cb.value).join(', ');
+}
+</script>
+</body>
+</html>
